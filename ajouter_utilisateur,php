@@ -1,0 +1,50 @@
+<?php
+session_start();
+include 'db.php';
+
+$message = "";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nom_utilisateur = $_POST['nom_utilisateur'];
+    $email = $_POST['email'];
+    $mot_de_passe = password_hash($_POST['mot_de_passe'], PASSWORD_DEFAULT);
+
+    $verif = $bdd->prepare("SELECT * FROM utilisateurs WHERE email = ?");
+    $verif->execute([$email]);
+
+    if ($verif->rowCount() > 0) {
+        $message = "Cet email est déjà utilisé.";
+    } else {
+        $insert = $bdd->prepare("INSERT INTO utilisateurs (nom_utilisateur, email, mot_de_passe, date_inscription) VALUES (?, ?, ?, NOW())");
+        $insert->execute([$nom_utilisateur, $email, $mot_de_passe]);
+        $message = "Utilisateur ajouté avec succès.";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un utilisateur</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<?php include 'admin_header.php'; ?>
+
+<div class="form-container">
+    <h2>Ajouter un utilisateur</h2>
+    <?php if ($message): ?>
+        <p style="color: yellow;"><?= $message ?></p>
+    <?php endif; ?>
+    <form method="POST">
+        <input type="text" name="nom_utilisateur" placeholder="Nom d'utilisateur" required>
+        <input type="email" name="email" placeholder="Adresse e-mail" required>
+        <input type="password" name="mot_de_passe" placeholder="Mot de passe" required>
+        <button type="submit">Ajouter</button>
+    </form>
+</div>
+
+<?php include 'footer.php'; ?>
+</body>
+</html>
